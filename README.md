@@ -28,7 +28,7 @@ agent_folder/ # agent's package directory
 agent.py # must define root_agent
 .env # environment variables
 
-## Essential Components:
+## Basic Agent:
 
 1. **init**.py
 
@@ -48,7 +48,7 @@ Always run adk commands from the parent directory, not from inside the agent dir
 
 This structure ensures that ADK can automatically discover and load the agent when running commands like adk web or adk run.
 
-## Key Components
+### Key Components
 
 1. Identity: name and description
 
@@ -75,3 +75,23 @@ This structure ensures that ADK can automatically discover and load the agent wh
 - Perform calculations
 - Fetch real-time data
 - Execute specific actions
+
+## Agent with Tools
+
+### Type of Tools:
+
+1. Built-in Tools, only work with Gemini models:
+
+- **Google Search**: google_search tool searches the web
+- **Code Execution**: built_in_code_execution tool runs code snippets
+- **RAG queries with Vertex AI**: vertex_ai_search_tool searches though own data
+
+**Note**: Currently, only one built-in tool at a time for each root agent
+
+2. Function calling tools:
+
+- **Functions/ Methods**
+- **Agents-as Tools**
+- **Long Running Function Tools**
+
+3. THird-Party Tools
