@@ -32,21 +32,29 @@ agent.py # must define root_agent
 
 1. **init**.py
 
-Must import the agent module: from . import agent
+Import the agent module: from . import agent
 This makes the agent discoverable by ADK
 
 2. agent.py
 
-Must define a variable named root_agent
+Define a variable named root_agent
 This is the entry point that ADK uses to find agent
 
 3. Command Location
 
-Always run adk commands from the parent directory, not from inside the agent directory;
+Always run adk commands from the parent directory containing agent folder;
 `adk` shows all command options
 `adk web` spin off the FastAPI server with Web UI which makes an end point to sent requess to the agent
 
 This structure ensures that ADK can automatically discover and load the agent when running commands like adk web or adk run.
+
+4. Access the web UI by opening the URL shown in terminal, typically http://localhost:8000
+
+5. Select an agent from dropdown menu in top-left corner of the UI
+
+6. Start chatting with selected agent in textbox at the bottom of the screen
+
+7. Exit the conversation or stop the server with Ctrl+C in terminal.
 
 ### Key Components
 
@@ -94,4 +102,92 @@ This structure ensures that ADK can automatically discover and load the agent wh
 - **Agents-as Tools**
 - **Long Running Function Tools**
 
-3. THird-Party Tools
+3. Third-Party Tools
+
+## LiteLLM Agent
+
+LiteLLM is a Python library that provides a unified interface for interacting with multiple LLM provides through a single API which allows:
+
+- Access to 100+ different LLMs from Providers like OpenAI, Anthropic, AWS Bedrock, etc
+- Standardize inputs and outputs across different LLM providers
+- Track costs, manage API keys and handle errors
+- Implement fallbacks and load balancing across different models
+
+LiteLLM enhances ADK nodel-agnostic capability by providing easy switch between LLM providers without changing agent code.
+
+**Note**: The limitation of integrating non-Google models with ADK is that only cutom function tools can be used, there is no access to Google built-in tools like google search, code execution and Vertex Ai serach
+
+LiteLLM agent demonstrates how to use LiteLLM with ADK with models provided by OpenRouter. A model is specified by provider/model_family/specific_model_number. An OpenRouter account is needed and OPENROUER_API_KEY variable in .env file.
+
+## Structured Output Agent
+
+Structured Output Agent uses structured data formats for inputs and outputs implemented with Pydantic:
+
+1. **Controlled Output Format**: Using output_schema LLM producaes consistent responces in JSON structure
+2. **Data Validation**: correct formatted fileds with Pydantic validation
+3. **Improved downstream processing**: structured outputs are easier to handle by other agents
+
+### Email Generator Agent
+
+The user provides a description of the email they need, agent processes this request and generates both a subject and body
+The agent formats its response as a JSON object matching the EmailContent schema. ADK validates the response against the schema before returning it. The structured output is stored in the session state under the specified output_key.
+
+The structured output is produced with Pydantic BaseModel which defines the required fields and their description:
+
+1. Email Subject: a concise relevant subject line
+2. Email Body: greeting, paragraoh and signature
+
+### Structured Data Exchange
+
+Structured outputs are part of ADK's broader support for structured data exchange, which includes:
+
+1. **input_schema**: expected input format, easy to fail when rigit structure expected, not used by the email generation agent
+2. **output_schema**: define required output format as a Pydantic BaseModel class
+3. **output_key**: Store the result in session state for use by other agents
+
+Also see
+
+- [ADK Structured Data Documentation](https://google.github.io/adk-docs/agents/llm-agents/#structuring-data-input_schema-output_schema-output_key)
+- [Pydantic Documentation](https://docs.pydantic.dev/latest/why/)
+
+## Session, State and Runners in ADK
+
+**Session** is a statefull message history.
+**Runner** conects Agents and Session
+
+Stateful agent with memory manages a sessions and maintain context, remembering user information across interactions. The agent can store information and create contextual and personalized experiences.
+
+ADK Session:
+
+1. Maintain State: Store and access user data, preferences, and other information between interactions
+2. Track Conversation History: Automatically record and retrieve message history
+3. Personalize Responses: Use stored information to create more contextual and personalized agent experiences
+
+### Question and ansering agent
+
+respondes base on stored user information in the session state. Stateful_session.py:
+
+- Creating a session with user preferences
+- Using template variables to access session state in agent instructions
+- Running the agent with a session to maintain context
+
+### Project structure:
+
+stateful-agent-memory/
+│
+├── stateful_session.py # Main script
+│
+└── qa_agent/ # Agent implementation
+├── **init**.py
+└── agent.py # Agent definition with
+
+### Run
+
+`python steful_session.py`
+
+This will:
+
+1. Create a new session with user information
+2. Initialize the agent with access to that session
+3. Process a user query about the stored preferences
+4. Display the agent's response based on the session data
