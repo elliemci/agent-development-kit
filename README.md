@@ -163,7 +163,7 @@ ADK Session:
 2. Track Conversation History: Automatically record and retrieve message history
 3. Personalize Responses: Use stored information to create more contextual and personalized agent experiences
 
-### Question and ansering agent
+### Question and answering agent
 
 respondes base on stored user information in the session state. Stateful_session.py:
 
@@ -191,3 +191,52 @@ This will:
 2. Initialize the agent with access to that session
 3. Process a user query about the stored preferences
 4. Display the agent's response based on the session data
+
+Only use runner.run for testing, and always runner.run_async for realworld applications
+
+## Agent with persistent storage
+
+ADK provides `DatabaseSessionService`, intitalized with a database URL that allows to store session and state data in a SQLite database file:
+
+1. Long-term Memory: Information persists across application restarts
+2. Consistent User Experiences: Users can continue conversations where they left off
+3. Multi-user Support: Different users' data remains separate and secure
+4. Scalability: Works with production databases for high-scale deployments
+
+`DatabseSessionService` supports various database backends through SQLAlchemy:
+
+- PostgreSQL: postgresql://user:password@localhost/dbname
+- MySQL: mysql://user:password@localhost/dbname
+- MS SQL Server: mssql://user:password@localhost/dbname
+
+### Session Managment
+
+If there is an existing session, use it otherwise create a new one
+
+### State Managments with tools
+
+The agent has tools that update the persistent state, where wach change to tool_context. stae is saved to database
+
+### Project Structure
+
+persistent-storage-agent/
+│
+├── memory_agent/ # Agent package
+│ ├── **init**.py # Required for ADK to discover the agent
+│ └── agent.py # Agent definition with reminder tools
+│
+├── main.py # Application entry point with database session setup
+├── utils.py # Utility functions for terminal UI and agent interaction
+├── .env # Environment variables
+├── agent_data.db # SQLite database file created when first run
+
+### Run
+
+`python main.py`
+
+Which will:
+
+1. Connect to the SQLite database, or create it if it doesn't exist
+2. Check for previous sessions for the user
+3. Start a conversation with the memory agent
+4. Save all interactions to the database
