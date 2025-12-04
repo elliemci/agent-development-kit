@@ -409,3 +409,106 @@ For a production implementation, consider:
 2. User Authentication: Implement proper user authentication to securely identify users
 3. Error Handling: Add robust error handling for agent failures and state corruption
 4. Monitoring: Implement logging and monitoring to track system performance
+
+## Agent with Callbacks
+
+Callbacks are functionsthat execute at specific points in the agent'slifecycle used to intercept and modify agent behavior at different stages of execution. They can
+
+1. Monitor and Log: Track agent activity and performance metrics
+2. Filter Content: Block inappropriate requests or responses
+3. Transform Data: Modify inputs and outputs in the agent workflow
+4. Implement Security Policies: Enforce compliance and safety measures
+5. Add Custom Logic: Insert business-specific processing into the agent flow
+
+### ADK Callback Parameters and Context
+
+#### CallbackContext
+
+The CallbackContext object is provided to all callback types and contains:
+
+- `agent_name`: The name of the agent being executed
+- `invocation_id`: A unique identifier for the current agent invocation
+- `state`: Access to the session state, allowing you to read/write persistent data
+- `app_name`: The name of the application
+- `user_id`: The ID of the current user
+- `session_id`: The ID of the current session
+
+Examples: # Access the state to store or retrieve data
+user_name = callback_context.state.get("user_name", "Unknown")
+
+      # Log the current agent and invocation
+      print(f"Agent {callback_context.agent_name} executing (ID: {callback_context.invocation_id})")
+
+#### ToolContext
+
+The ToolContext object is provided to tool callbacks and contains:
+
+agent_name: The name of the agent that initiated the tool call
+state: Access to the session state, allowing tools to read/modify shared data
+properties: Additional properties specific to the tool execution
+
+Example: # Record tool usage in state
+tools_used = tool_context.state.get("tools_used", [])
+tools_used.append(tool.name)
+tool_context.state["tools_used"] = tools_used
+
+#### LlmRequest
+
+The LlmRequest object is provided to the before_model_callback and contains:
+
+- `contents`: List of Content objects representing the conversation history
+- `generation_config`: Configuration for the model generation
+- `safety_settings`: Safety settings for the model
+- `tools`: Tools provided to the model
+
+#### LlmResponse
+
+The LlmResponse object is returned from the model and provided to the after_model_callback:
+
+- content: Content object containing the model's response
+- tool_calls: Any tool calls the model wants to make
+- usage_metadata: Metadata about the model usage like tokens
+
+### Types of Callbacks
+
+included in the project
+
+This project includes three examples of the six callback patterns [Types of Callbacks](https://google.github.io/adk-docs/callbacks/types-of-callbacks/):
+
+1. Agent Callbacks: before_after_agent/
+
+- Before Agent Callback: Runs at the start of agent processing
+- After Agent Callback: Runs after the agent completes processing
+
+2. Model Callbacks: before_after_model/
+
+- Before Model Callback: Intercepts requests before they reach the LLM
+- After Model Callback: Modifies responses after they come from the LLM
+
+3. Tool Callbacks: before_after_tool/
+
+- Before Tool Callback: Modifies tool arguments or skips tool execution
+- After Tool Callback: Enhances tool responses with additional information
+
+### Project Structure
+
+agent-with-callbacks/
+│
+├── before_after_agent/ # Agent callback example
+│ ├── **init**.py # Required for ADK discovery
+│ └──agent.py # Agent with agent callbacks
+│
+├── before_after_model/ # Model callback example
+│ ├── **init**.py # Required for ADK discovery
+│ └── agent.py # Agent with model callbacks
+│
+└── before_after_tool/ # Tool callback example
+├── **init**.py # Required for ADK discovery
+└── agent.py # Agent with tool callbacks
+
+### Run
+
+`cd agent-with-callbacks`
+`adk web`
+
+Select an agent from the dropdown menu in the wen UI
