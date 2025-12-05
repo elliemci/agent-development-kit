@@ -512,3 +512,105 @@ agent-with-callbacks/
 `adk web`
 
 Select an agent from the dropdown menu in the wen UI
+
+## Workflows
+
+ADK offers different types of workflow agents:
+
+- **Sequential Agents**: for strict ordered execution
+- **Loop Agents**: for repeated execution of sub-agents based on conditions
+- **Parallel Agents**: for concurrent execution of independent sub-agents
+
+## Sequential Workflow Agent
+
+Sequential Agents are workflow agents in ADK that:
+
+1. Execute in a Fixed Order: Sub-agents run one after another in the exact sequence they are specified
+2. Pass Data Between Agents: Using state management to pass information from one sub-agent to the next
+3. Create Processing Pipelines: Perfect for scenarios where each step depends on the previous step's output
+
+Use Sequential Agents for a deterministic, step-by-step workflow where the execution order matters.
+
+### Lead Qualification Pipeline
+
+`lead_qualification_agent` as a Sequential Agent that implements a lead qualification pipeline for sales teams. This Sequential Agent orchestrates three specialized sub-agents:
+
+1. Lead Validator Agent: Checks if the lead information is complete enough for qualification
+
+- Validates for required information like contact details and interest
+- Outputs a simple "valid" or "invalid" with a reason
+
+2. Lead Scorer Agent: Scores valid leads on a scale of 1-10
+
+- Analyzes factors like urgency, decision-making authority, budget, and timeline
+- Provides a numeric score with a brief justification
+
+3. Action Recommender Agent: Suggests next steps based on the validation and score
+
+- For invalid leads: Recommends what information to gather
+- For low-scoring leads (1-3): Suggests nurturing actions
+- For medium-scoring leads (4-7): Suggests qualifying actions
+- For high-scoring leads (8-10): Suggests sales actions
+
+lead_qualification_agent Sequential Agent orchestrates this process by:
+
+1. Running the Validator first to determine if the lead is complete
+2. Running the Scorer next (which can access validation results via state)
+3. Running the Recommender last (which can access both validation and scoring results)
+
+The output of each sub-agent is stored in the session state using the output_key parameter:
+
+`validation_status`
+`lead_score`
+`action_recommendation`
+
+### Project Structure
+
+sequential-workflow/
+│
+├── lead_qualification_agent/ # Main Sequential Agent package
+│ ├── **init**.py # Package initialization
+│ ├── agent.py # Sequential Agent definition (root_agent)
+│ │
+│ └── subagents/ # Sub-agents folder
+│ ├── **init**.py # Sub-agents initialization
+│ │
+│ ├── validator/ # Lead validation agent
+│ │ ├── **init**.py
+│ │ └── agent.py
+│ │
+│ ├── scorer/ # Lead scoring agent
+│ │ ├── **init**.py
+│ │ └── agent.py
+│ │
+│ └── recommender/ # Action recommendation agent
+│ ├── **init**.py
+│ └── agent.py
+│
+└── .env.example # Environment variables example
+
+### Run
+
+`cd sequential-workflow`
+`adk web`
+
+**Qualified Lead** Example:
+
+Lead Information:
+Name: Sarah Johnson
+Email: sarah.j@techinnovate.com
+Phone: 555-123-4567
+Company: Tech Innovate Solutions
+Position: CTO
+Interest: Looking for an AI solution to automate customer support
+Budget: $50K-100K available for the right solution
+Timeline: Hoping to implement within next quarter
+Notes: Currently using a competitor's product but unhappy with performance
+
+**Unqualified Lead** Example
+
+Lead Information:
+Name: John Doe
+Email: john@gmail.com
+Interest: Something with AI maybe
+Notes: Met at conference, seemed interested but was vague about needs
